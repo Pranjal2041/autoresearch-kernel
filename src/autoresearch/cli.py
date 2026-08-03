@@ -126,7 +126,7 @@ def cmd_init(args) -> int:
     print()
     print("next:")
     print(f"  ar validate {root}")
-    print(f"  ar run {root} --agent dummy   # green pipeline before real agents")
+    print(f"  ar run {root} --agent random-search   # green pipeline before real agents")
     return 0
 
 
@@ -166,13 +166,18 @@ def cmd_list(args) -> int:
             name, desc = read_meta(f, "experiment.yaml")
             print(f"  {f.name:<24} {desc[:76]}")
     if what in ("all", "agents"):
+        from .registry import PACKAGED_AGENTS
         section("agents")
-        folders = sorted(p.parent for p in Path("agents").glob("*/agent.yaml"))
-        if not folders:
-            print("  (none under agents/)")
-        for f in folders:
-            name, desc = read_meta(f, "agent.yaml")
-            print(f"  {f.name:<24} {desc[:76]}")
+        local = {p.parent.name: p.parent for p in Path("agents").glob("*/agent.yaml")}
+        bundled = ({p.parent.name: p.parent for p in PACKAGED_AGENTS.glob("*/agent.yaml")}
+                   if PACKAGED_AGENTS.is_dir() else {})
+        if not local and not bundled:
+            print("  (none)")
+        for name in sorted({**bundled, **local}):
+            folder = local.get(name, bundled.get(name))
+            _, desc = read_meta(folder, "agent.yaml")
+            origin = "local" if name in local else "bundled"
+            print(f"  {name:<24} [{origin}] {desc[:68]}")
     if what in ("all", "runners"):
         section("runners")
         for name, desc in RUNNERS.items():

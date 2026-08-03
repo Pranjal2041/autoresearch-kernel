@@ -21,3 +21,8 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/autoresearch"]
+
+[tool.hatch.build.targets.wheel.force-include]
+# The bundled agents are product, not repo content: a pip-installed user
+# must be able to `ar run --agent claude-code` with no checkout.
+"agents" = "autoresearch/agents"

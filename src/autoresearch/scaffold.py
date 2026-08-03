@@ -2,8 +2,9 @@
 
 Generates a working official-mode experiment: a commented experiment.yaml,
 rules, a trivial seed, and an eval stub that already runs. `ar validate`
-passes on the result, and `ar run` with the dummy agent scores it, so the
-user starts from a green pipeline and edits, rather than from a blank page.
+passes on the result, and `ar run` with the random-search agent produces
+real scored submits, so the user starts from a green pipeline and edits,
+rather than from a blank page.
 """
 
 from __future__ import annotations

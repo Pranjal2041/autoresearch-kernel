@@ -32,8 +32,18 @@ class RegistryError(Exception):
     pass
 
 
+PACKAGED_AGENTS = Path(__file__).parent / "agents"
+
+
 def resolve_agent(name_or_path: str, search_root: Path) -> AgentSpec:
-    candidates = [Path(name_or_path), search_root / "agents" / name_or_path]
+    """Resolution order: explicit path, ./agents/<name> in the working
+    directory (a local agent shadows a bundled one of the same name),
+    then the agents bundled inside the installed package."""
+    candidates = [
+        Path(name_or_path),
+        search_root / "agents" / name_or_path,
+        PACKAGED_AGENTS / name_or_path,
+    ]
     agent_dir = next((c for c in candidates if (c / "agent.yaml").is_file()), None)
     if agent_dir is None:
         raise RegistryError(
