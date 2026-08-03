@@ -1,0 +1,33 @@
+name: blackbox-opt
+description: >
+  Evolve a blackbox minimizer, ported from the optimize_anything paper's
+  Appendix B (their claim: evolved solvers beat Optuna on 7 of the 10
+  hardest EvalSet problems at a 2000-eval budget). Five problems are the
+  visible val set, five are kernel-only test; the metric is mean
+  normalized regret (0 = known optimum, 1 = median random sampling).
+
+objective:
+  metric: regret
+  direction: minimize
+  mode: official
+  eval_command: python3 /eval/run.py --split val --out /result/metrics.json
+  metric_path: metrics.json:regret
+  timeout_seconds: 1200
+  test_command: python3 /eval/run.py --split test --out /result/metrics.json
+
+submit:
+  signature:
+    notes: {type: string, required: true}
+
+environment:
+  base: python:3.12-slim
+  resources: {cpu: 4, mem_gb: 4, gpu: 0, net: false}
+  setup:
+    - pip install numpy scipy cma scikit-learn
+
+tracking:
+  max_file_mb: 5
+
+stop:
+  max_submits: 30
+  max_hours: 6

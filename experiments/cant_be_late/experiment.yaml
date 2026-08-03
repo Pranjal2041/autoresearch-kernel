@@ -1,0 +1,35 @@
+name: cant-be-late
+description: >
+  The "Can't Be Late" spot-vs-on-demand scheduling problem from the ADRS
+  benchmark, ported from the optimize_anything artifact (their claim: 7.8%
+  cost savings over the deadline-check baseline, topping the ADRS
+  leaderboard). Real spot-availability traces; deadlines are a hard
+  constraint enforced by the simulator; the metric is mean dollar cost
+  over 12 simulations. Test traces come from a different availability
+  zone and are kernel-only.
+
+objective:
+  metric: mean_cost
+  direction: minimize
+  mode: official
+  eval_command: python3 /eval/run.py --split val --out /result/metrics.json
+  metric_path: metrics.json:mean_cost
+  timeout_seconds: 900
+  test_command: python3 /eval/run.py --split test --out /result/metrics.json
+
+submit:
+  signature:
+    notes: {type: string, required: true}
+
+environment:
+  base: python:3.12-slim
+  resources: {cpu: 4, mem_gb: 4, gpu: 0, net: false}
+  setup:
+    - pip install numpy tqdm colorama configargparse pyyaml
+
+tracking:
+  max_file_mb: 5
+
+stop:
+  max_submits: 30
+  max_hours: 6
