@@ -1,0 +1,29 @@
+name: claude-code
+description: >
+  Claude Code in a loop, Karpathy-style: each iteration is a fresh context
+  that reads the rules and the full submit history from the kernel API, makes
+  one focused change, submits, and exits. Long-term memory lives in the API
+  history and in notes.md inside the workspace, not in the context window.
+command: bash /agent/loop.sh
+env:
+  AR_MAX_LOOPS: "0"          # 0 = loop until the kernel stops the run
+  IS_SANDBOX: "1"            # claude refuses --dangerously-skip-permissions as
+                             # root without this; in a container it is truthful
+mounts:
+  # Credentials for the claude CLI, set up once with `ar auth claude-code`:
+  # seeded from the host's ~/.claude when possible, otherwise via an
+  # interactive in-container login. Mounted into every agent container.
+  - {source: "~/.claude-ar", target: "/root/.claude", mode: "rw"}
+auth_seed:
+  host: "~/.claude"
+  files: [".credentials.json"]
+auth_help: |
+  Run:  claude
+  Then: /login and follow the prompts
+  Then: /exit
+image_setup:
+  # Docker runner only: bake node + claude CLI into the agent layer.
+  # With the local runner, `claude` is expected on the host PATH.
+  - apt-get update && apt-get install -y curl ca-certificates gnupg
+  - curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && apt-get install -y nodejs
+  - npm install -g @anthropic-ai/claude-code

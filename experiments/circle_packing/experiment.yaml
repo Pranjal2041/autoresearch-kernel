@@ -1,0 +1,32 @@
+name: circle-packing-26
+description: >
+  Pack 26 non-overlapping circles inside the unit square, maximizing the sum
+  of their radii. The AlphaEvolve benchmark task: best published results are
+  around 2.635 to 2.636. The kernel verifies geometry exactly; only valid
+  packings score.
+
+objective:
+  metric: sum_radii
+  direction: maximize
+  mode: official
+  eval_command: python3 /eval/run.py --out /result/metrics.json
+  metric_path: metrics.json:sum_radii
+  timeout_seconds: 600
+  viz_command: python3 /eval/viz.py
+
+submit:
+  signature:
+    notes: {type: string, required: true}
+
+environment:
+  base: python:3.12-slim
+  resources: {cpu: 4, mem_gb: 4, gpu: 0, net: false}
+  setup:
+    - pip install numpy scipy cma
+
+tracking:
+  max_file_mb: 5
+
+stop:
+  max_submits: 20
+  max_hours: 3

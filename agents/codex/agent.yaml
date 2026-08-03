@@ -1,0 +1,22 @@
+name: codex
+description: >
+  OpenAI Codex CLI in a fresh-context loop, same shape as the claude-code
+  agent: each iteration reads the rules and live submit history, makes one
+  focused change, submits, and exits. Set AR_CODEX_MODEL to pin a model.
+command: bash /agent/loop.sh
+env:
+  AR_MAX_LOOPS: "0"
+  AR_CODEX_MODEL: ""
+mounts:
+  # Credentials for the codex CLI, set up once with `ar auth codex`.
+  - {source: "~/.codex-ar", target: "/root/.codex", mode: "rw"}
+auth_seed:
+  host: "~/.codex"
+  files: ["auth.json"]
+auth_help: |
+  Run:  codex login
+  Follow the prompts, then exit.
+image_setup:
+  - apt-get update && apt-get install -y curl ca-certificates gnupg
+  - curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && apt-get install -y nodejs
+  - npm install -g @openai/codex

@@ -1,0 +1,6 @@
+name: dummy
+description: >
+  Scripted agent for testing the kernel. Walks a fixed schedule of candidates
+  through submit/poll, and deliberately exercises the tracking rules with
+  dotfiles, junk dirs, and a large binary.
+command: python3 /agent/run.py

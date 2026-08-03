@@ -1,0 +1,29 @@
+name: toy-quadratic
+description: >
+  Minimal end-to-end exercise of the kernel. The candidate is three numbers
+  in solution.py; the objective is mean squared error against hidden targets.
+  Val and test targets differ slightly, so val-test divergence is visible.
+
+objective:
+  metric: val_loss
+  direction: minimize
+  mode: official
+  eval_command: python3 /eval/run.py --split val --out /result/metrics.json
+  metric_path: metrics.json:val_loss
+  timeout_seconds: 60
+  test_command: python3 /eval/run.py --split test --out /result/metrics.json
+  viz_command: python3 /eval/viz.py
+
+submit:
+  signature:
+    notes: {type: string, required: true}
+
+environment:
+  base: python:3.12-slim
+  resources: {cpu: 1, mem_gb: 1, gpu: 0, net: false}
+
+tracking:
+  max_file_mb: 5
+
+stop:
+  max_submits: 8

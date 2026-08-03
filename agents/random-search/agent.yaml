@@ -1,0 +1,9 @@
+name: random-search
+description: >
+  Algorithmic baseline with no LLM anywhere: adaptive gaussian random
+  search over the float literals in solution.py. Proves that an agent is
+  just a process speaking the kernel API, and gives LLM agents a floor to
+  beat on numeric experiments.
+command: python3 /agent/run.py
+env:
+  AR_RS_SEED: "0"
