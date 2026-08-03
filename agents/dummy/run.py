@@ -68,7 +68,10 @@ def main() -> None:
               f"{metric.get('name')}={metric.get('value')} best={record['best_so_far']}")
 
     status, best = call("GET", "/best")
-    print(f"final best: submit {best['submit_id']} value {best['metric']['value']}")
+    if status == 200:
+        print(f"final best: submit {best['submit_id']} value {best['metric']['value']}")
+    else:
+        print("final best: none (no scored submits)")
 
 
 if __name__ == "__main__":

@@ -53,8 +53,8 @@ Scaffold a new experiment folder.
 Creates a complete, working official-mode experiment: a commented
 experiment.yaml, a rules.md skeleton, a trivial seed candidate, and an
 eval stub that scores it. The result passes `ar validate` and runs
-end-to-end with the dummy agent immediately, so you start from a green
-pipeline and edit, rather than debugging a blank page.
+end-to-end with the random-search agent immediately, so you start from a
+green pipeline and edit, rather than debugging a blank page.
 
 Edit order that works well: eval/run.py (the scorer defines the game),
 then experiment.yaml (metric, environment, budgets), then rules.md (what

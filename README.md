@@ -13,18 +13,23 @@ watches the log.
 ## Install
 
 ```
-uv venv .venv
-uv pip install -e ".[dev]" --python .venv/bin/python
+pip install git+https://github.com/Pranjal2041/autoresearch-kernel
 ```
+
+The `ar` CLI, the kernel, and the bundled agents (claude-code, codex,
+random-search, dummy) all ship in the package: no checkout needed.
+For development, clone and `uv pip install -e ".[dev]"` instead.
 
 ## Quickstart
 
 ```
-ar validate experiments/toy_quadratic
-ar run experiments/toy_quadratic --agent dummy --runner local --name demo
+ar init experiments/my_experiment     # scaffold a working experiment
+ar validate experiments/my_experiment
+ar run experiments/my_experiment --agent dummy --runner local --name demo
 ar watch runs/demo            # dashboard at http://127.0.0.1:8722
 ar history runs/demo          # submit table in the terminal
 ar diff runs/demo 2 3         # what changed between two submits
+ar help                       # full documentation, `ar help design` for the contract
 ```
 
 Runners: `local` (subprocess, no isolation, instant), `apple` (Apple
