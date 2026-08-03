@@ -48,6 +48,7 @@ $HISTORY
 $(cat "$AR_AGENT_DIR/prompt.md")" \
     --dangerously-skip-permissions \
     ${AR_CLAUDE_MODEL:+--model "$AR_CLAUDE_MODEL"} \
+    < /dev/null \
     || { echo "[loop] claude exited nonzero, backing off"; sleep 15; }
 
   sleep 2
