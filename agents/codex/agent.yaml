@@ -1,15 +1,24 @@
 name: codex
 description: >
   OpenAI Codex CLI in a fresh-context loop, same shape as the claude-code
-  agent: each iteration reads the rules and live submit history, makes one
-  focused change, submits, and exits. Set AR_CODEX_MODEL to pin a model.
+  agent. Auth and model config follow the econ-kernel codex provider
+  design: a read-only shared auth mount, and a per-instance CODEX_HOME
+  built at startup with auth.json (0600) plus a generated config.toml
+  (model, reasoning effort, approval and sandbox policy). Set
+  AR_CODEX_MODEL / AR_CODEX_EFFORT to pin them.
 command: bash /agent/loop.sh
 env:
   AR_MAX_LOOPS: "0"
-  AR_CODEX_MODEL: ""
+  AR_CODEX_MODEL: ""           # empty = the CLI's default model
+  AR_CODEX_EFFORT: "high"      # model_reasoning_effort in config.toml
+  AR_CODEX_TIMEOUT: "2400"     # inactivity ceiling per iteration, seconds
+  AR_CODEX_SHARED: "/codex-shared"
 mounts:
-  # Credentials for the codex CLI, set up once with `ar auth codex`.
-  - {source: "~/.codex-ar", target: "/root/.codex", mode: "rw"}
+  # Read-only shared credentials, set up once with `ar auth codex`.
+  # The loop copies auth.json into a private per-instance CODEX_HOME, so
+  # parallel codex agents never contend and none can corrupt the shared
+  # auth.
+  - {source: "~/.codex-ar", target: "/codex-shared", mode: "ro"}
 auth_seed:
   host: "~/.codex"
   files: ["auth.json"]
