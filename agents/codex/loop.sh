@@ -13,7 +13,8 @@ LOOPS="${AR_MAX_LOOPS:-0}"
 ITERATION=0
 
 # ── per-instance CODEX_HOME ──────────────────────────────────────────
-CODEX_HOME="${TMPDIR:-/tmp}/ar-codex-home-$$"
+# HOME, not tmp: codex refuses helper binaries under temporary dirs
+CODEX_HOME="${HOME:-/tmp}/.ar-codex-home-$$"
 mkdir -p "$CODEX_HOME"
 chmod 700 "$CODEX_HOME"
 for AUTH_SOURCE in "${AR_CODEX_SHARED:-/codex-shared}/auth.json" "$HOME/.codex/auth.json"; do
@@ -65,6 +66,7 @@ while :; do
 
   run_codex \
     --cd "$AR_WORKSPACE" \
+    --skip-git-repo-check \
     "$(cat "$AR_RULES")
 
 ## Your objective
