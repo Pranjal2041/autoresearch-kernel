@@ -54,6 +54,9 @@ ACTUAL_COSTS = {
 
 
 def wandb_log(*args, **kwargs):
-    import wandb
+    try:
+        import wandb
+    except ModuleNotFoundError:  # ar port: wandb optional, mirrors main.py's stub
+        return
     if wandb.run is not None:
         wandb.log(*args, **kwargs)
