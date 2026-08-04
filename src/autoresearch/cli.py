@@ -1,4 +1,4 @@
-"""The `ar` CLI."""
+"""The `ark` CLI."""
 
 from __future__ import annotations
 
@@ -17,9 +17,9 @@ from . import help as help_texts
 
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="ar", add_help=True,
+        prog="ark", add_help=True,
         description="autoresearch: run agents in a loop against a measurable objective",
-        epilog="Run `ar help` for the full overview, `ar help <command|concept>` for details.",
+        epilog="Run `ark help` for the full overview, `ark help <command|concept>` for details.",
     )
     sub = parser.add_subparsers(dest="command")
 
@@ -105,7 +105,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     try:
         return COMMANDS[args.command](args)
-    except BrokenPipeError:  # e.g. `ar diff ... | head`
+    except BrokenPipeError:  # e.g. `ark diff ... | head`
         import os
         os.dup2(os.open(os.devnull, os.O_WRONLY), sys.stdout.fileno())
         return 0
@@ -125,8 +125,8 @@ def cmd_init(args) -> int:
     print("  eval/run.py       the scorer")
     print()
     print("next:")
-    print(f"  ar validate {root}")
-    print(f"  ar run {root} --agent random-search   # green pipeline before real agents")
+    print(f"  ark validate {root}")
+    print(f"  ark run {root} --agent random-search   # green pipeline before real agents")
     return 0
 
 

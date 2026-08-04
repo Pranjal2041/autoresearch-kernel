@@ -16,20 +16,20 @@ watches the log.
 pip install git+https://github.com/Pranjal2041/autoresearch-kernel
 ```
 
-The `ar` CLI, the kernel, and the bundled agents (claude-code, codex,
+The `ark` CLI, the kernel, and the bundled agents (claude-code, codex,
 random-search, dummy) all ship in the package: no checkout needed.
 For development, clone and `uv pip install -e ".[dev]"` instead.
 
 ## Quickstart
 
 ```
-ar init experiments/my_experiment     # scaffold a working experiment
-ar validate experiments/my_experiment
-ar run experiments/my_experiment --agent dummy --runner local --name demo
-ar watch runs/demo            # dashboard at http://127.0.0.1:8722
-ar history runs/demo          # submit table in the terminal
-ar diff runs/demo 2 3         # what changed between two submits
-ar help                       # full documentation, `ar help design` for the contract
+ark init experiments/my_experiment     # scaffold a working experiment
+ark validate experiments/my_experiment
+ark run experiments/my_experiment --agent dummy --runner local --name demo
+ark watch runs/demo            # dashboard at http://127.0.0.1:8722
+ark history runs/demo          # submit table in the terminal
+ark diff runs/demo 2 3         # what changed between two submits
+ark help                       # full documentation, `ark help design` for the contract
 ```
 
 Runners: `local` (subprocess, no isolation, instant), `apple` (Apple
@@ -42,7 +42,7 @@ fresh-context loop. With the local runner the host `claude` CLI is used
 as-is. For container runners, set up credentials once:
 
 ```
-ar auth claude-code --runner apple
+ark auth claude-code --runner apple
 ```
 
 This seeds `~/.claude-ar` from existing host credentials when they exist as
@@ -50,7 +50,7 @@ a file. On macOS the host CLI keeps tokens in the Keychain, so instead it
 drops you into a one-time login shell inside the agent's container image
 (`claude`, then `/login`, then exit). The directory is mounted into every
 future agent container, and the built agent layer is cached and reused by
-`ar run`.
+`ark run`.
 
 ## An experiment is a folder
 

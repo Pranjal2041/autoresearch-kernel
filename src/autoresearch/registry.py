@@ -25,7 +25,7 @@ class AgentSpec:
     mounts: list[dict] = field(default_factory=list)  # extra mounts (credentials etc.)
     image_setup: list[str] = field(default_factory=list)  # container layer commands
     auth_seed: dict | None = None  # {host: ~/.claude, files: [...]} to copy from
-    auth_help: str = ""  # printed inside the `ar auth` shell session
+    auth_help: str = ""  # printed inside the `ark auth` shell session
 
 
 class RegistryError(Exception):

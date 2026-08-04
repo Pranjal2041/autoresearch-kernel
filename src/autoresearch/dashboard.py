@@ -4,7 +4,7 @@ Reads the run directory fresh on every request, so it works identically on
 live and finished runs and can never influence either. This is the
 kernel-side view: test metrics are visible here, by design.
 
-`ar watch <run_dir>` serves one run. `ar watch <runs parent>` serves all
+`ark watch <run_dir>` serves one run. `ark watch <runs parent>` serves all
 runs under it with a run picker, defaulting to the most recently active.
 
 Endpoints (all JSON unless noted):
