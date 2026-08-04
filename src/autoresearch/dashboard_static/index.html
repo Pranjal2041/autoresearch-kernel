@@ -308,7 +308,19 @@ const LANG = {py: "python", md: "markdown", json: "json", sh: "bash", bash: "bas
               yaml: "yaml", yml: "yaml", js: "javascript", html: "xml", toml: "ini"};
 
 const state = { runs: [], run: null, summary: null, selected: null, pinned: false,
-                tab: "notes", diffBase: null, cache: {} };
+                tab: "notes", diffBase: null, filePath: null, cache: {},
+                lastFp: null, lastRunsFp: null, lastDetailFp: null };
+
+/* A poll may only touch the DOM when something actually changed;
+   otherwise it destroys the user's scroll and selection for nothing. */
+function fingerprint() {
+  const s = state.summary || {};
+  const records = s.records || [];
+  const last = records.length ? records[records.length - 1] : {};
+  return [s.run_name, records.length, last.submit_id, last.status,
+          s.live, s.finished && s.finished.reason,
+          state.selected, state.tab].join("|");
+}
 
 /* ── data flow ─────────────────────────────────────────────────── */
 async function api(path) {
@@ -321,6 +333,9 @@ async function refreshRuns() {
   try {
     state.runs = await (await fetch("/api/runs")).json();
     if (!state.run && state.runs.length) state.run = state.runs[0].name;
+    const fp = state.runs.map(r => r.name + r.live).join("|") + state.run;
+    if (fp === state.lastRunsFp) return;  // don't rebuild an open dropdown
+    state.lastRunsFp = fp;
     $("runpick").innerHTML = state.runs.map(r =>
       `<option value="${esc(r.name)}" ${r.name === state.run ? "selected" : ""}>` +
       `${esc(r.name)} · ${esc(r.experiment)}${r.live ? " · live" : ""}</option>`).join("");
@@ -343,6 +358,9 @@ async function refresh() {
       const cached = state.cache[state.selected];
       if (rec && cached && cached.record.status !== rec.status) delete state.cache[state.selected];
     }
+    const fp = fingerprint();
+    if (fp === state.lastFp) return;  // poll saw nothing new: zero DOM work
+    state.lastFp = fp;
     render();
   } catch (e) {}
 }
@@ -402,7 +420,16 @@ function dimmed(valueStr, prefixLen) {
   return `<span class="dim">${esc(valueStr.slice(0, prefixLen))}</span>${esc(valueStr.slice(prefixLen))}`;
 }
 
-/* ── render ────────────────────────────────────────────────────── */
+/* ── render ────────────────────────────────────────────────────────
+   Incremental by construction: the DOM mirrors append-only data, so
+   nothing the user is touching is ever rebuilt. New rail rows are
+   inserted; an existing row is rewritten only when its own fingerprint
+   changes; tiles are a fixed skeleton whose values update; the chart
+   redraws only when plotted data changes; the detail panel is keyed to
+   (submit, status, tab) and immutable otherwise. */
+function setText(id, text) { const el = $(id); if (el && el.textContent !== text) el.textContent = text; }
+function setHtml(id, html) { const el = $(id); if (el && el.__html !== html) { el.__html = html; el.innerHTML = html; } }
+
 function render() {
   const s = state.summary;
   if (!s) return;
@@ -413,57 +440,97 @@ function render() {
   let best = null;
   for (const r of scored) if (!best || isBetter(r.metric.value, best.metric.value)) best = r;
   const prefixLen = commonPrefixLen(scored.map(r => String(r.metric.value)));
-
-  const pulse = $("pulse");
-  pulse.className = "pulse" + (s.finished || !s.live ? " done" : "");
-  $("pulsetext").textContent = s.finished ? `finished · ${s.finished.reason}` : (s.live ? "live" : "idle");
   const meta = s.meta || {};
-  $("runmeta").innerHTML =
+
+  const pulseClass = "pulse" + (s.finished || !s.live ? " done" : "");
+  if ($("pulse").className !== pulseClass) $("pulse").className = pulseClass;
+  setText("pulsetext", s.finished ? `finished · ${s.finished.reason}` : (s.live ? "live" : "idle"));
+  setHtml("runmeta",
     `<b>${esc(obj.direction)} ${esc(obj.metric)}</b><span class="sep">·</span>` +
     `${esc(obj.mode)} mode<span class="sep">·</span>` +
-    `<b>${esc(meta.agent || "?")}</b> on <b>${esc(meta.runner || "?")}</b>`;
+    `<b>${esc(meta.agent || "?")}</b> on <b>${esc(meta.runner || "?")}</b>`);
 
-  // rail
+  syncRail(records, prefixLen);
+  syncTiles(records, scored, best, meta, obj, s);
+  setText("charttitle", `${obj.metric} over submits`);
+  syncChart(records, scored, obj);
+  renderDetail(records);
+}
+
+function railRowHtml(r, prefixLen, multiAgent) {
+  const deltaText = r.status === "failed" ? "failed"
+    : r._delta === null ? (r.status === "scored" ? "first" : r.status)
+    : r._cls === "tie" ? "tie" : expfmt(r._delta);
+  return `<div class="top"><span class="id">#${r.submit_id}</span>
+      <span class="score">${r.metric ? dimmed(String(r.metric.value), prefixLen) : "–"}</span>
+      ${r.best_so_far ? '<span class="star">★</span>' : ""}</div>
+    <div class="meta"><span class="badge ${r._cls}">${deltaText}</span>
+      ${multiAgent && r.agent ? `<span class="badge tie">${esc(r.agent)}</span>` : ""}
+      <span class="note">${esc(r.payload && r.payload.notes || r.error || "")}</span></div>`;
+}
+
+function syncRail(records, prefixLen) {
+  const list = $("sublist");
+  setText("railcount", String(records.length || ""));
   const multiAgent = new Set(records.map(r => r.agent).filter(Boolean)).size > 1;
-  $("railcount").textContent = records.length || "";
-  $("sublist").innerHTML = [...records].reverse().map(r => {
-    const sel = r.submit_id === state.selected ? " sel" : "";
-    const deltaText = r.status === "failed" ? "failed"
-      : r._delta === null ? (r.status === "scored" ? "first" : r.status)
-      : r._cls === "tie" ? "tie" : expfmt(r._delta);
-    return `<div class="sub${sel}" onclick="select(${r.submit_id})">
-      <div class="top"><span class="id">#${r.submit_id}</span>
-        <span class="score">${r.metric ? dimmed(String(r.metric.value), prefixLen) : "–"}</span>
-        ${r.best_so_far ? '<span class="star">★</span>' : ""}</div>
-      <div class="meta"><span class="badge ${r._cls}">${deltaText}</span>
-        ${multiAgent && r.agent ? `<span class="badge tie">${esc(r.agent)}</span>` : ""}
-        <span class="note">${esc(r.payload && r.payload.notes || r.error || "")}</span></div>
-    </div>`;
-  }).join("");
+  const byId = new Map();
+  for (const el of list.children) byId.set(+el.dataset.id, el);
+  let anchor = list.firstChild;
+  for (const r of [...records].reverse()) {
+    let el = byId.get(r.submit_id);
+    const fp = [r.status, r.best_so_far, r._cls, r._delta, prefixLen, multiAgent,
+                r.submit_id === state.selected,
+                (r.payload || {}).notes || "", r.error || ""].join("§");
+    if (!el) {
+      el = document.createElement("div");
+      el.dataset.id = r.submit_id;
+      el.addEventListener("click", () => select(r.submit_id));
+      list.insertBefore(el, anchor);
+    }
+    if (el.dataset.fp !== fp) {
+      el.dataset.fp = fp;
+      el.className = "sub" + (r.submit_id === state.selected ? " sel" : "");
+      el.innerHTML = railRowHtml(r, prefixLen, multiAgent);
+    }
+    anchor = el.nextSibling;
+  }
+}
 
-  // stat strip
+function syncTiles(records, scored, best, meta, obj, s) {
+  if (!$("t_best_v")) {
+    $("tiles").innerHTML = `
+    <div class="stat hero"><div class="k" id="t_best_k"></div>
+      <div class="v" id="t_best_v"></div><div class="c" id="t_best_c"></div></div>
+    <div class="stat"><div class="k">submits</div>
+      <div class="v" id="t_sub_v"></div><div class="c" id="t_sub_c"></div></div>
+    <div class="stat"><div class="k">kept</div>
+      <div class="v" id="t_kept_v"></div><div class="c">advanced the best</div></div>
+    <div class="stat"><div class="k">last gain</div>
+      <div class="v" id="t_gain_v"></div><div class="c" id="t_gain_c"></div></div>`;
+  }
   const failed = records.filter(r => r.status === "failed").length;
   const kept = scored.filter(r => r.best_so_far).length;
   const ups = records.filter(r => r._cls === "up" && r._delta !== null);
   const lastGain = ups.length ? ups[ups.length - 1]._delta : null;
   const stop = meta.stop || {};
-  $("tiles").innerHTML = `
-    <div class="stat hero"><div class="k">best ${esc(obj.metric)}</div>
-      <div class="v">${best ? dimmed(String(best.metric.value), 0) : "–"}</div>
-      <div class="c">${best ? `#${best.submit_id} · ${best.commit.slice(0,8)}` : "no scored submits"}</div></div>
-    <div class="stat"><div class="k">submits</div>
-      <div class="v">${records.length}${stop.max_submits ? `<small> / ${stop.max_submits}</small>` : ""}</div>
-      <div class="c">${failed ? failed + " failed" : "all scored"}</div></div>
-    <div class="stat"><div class="k">kept</div>
-      <div class="v">${kept}<small> / ${scored.length}</small></div>
-      <div class="c">advanced the best</div></div>
-    <div class="stat"><div class="k">last gain</div>
-      <div class="v">${lastGain === null ? "–" : expfmt(lastGain)}</div>
-      <div class="c">${s.finished ? "run over" : "latest improvement"}</div></div>`;
+  setText("t_best_k", `best ${obj.metric}`);
+  setText("t_best_v", best ? String(best.metric.value) : "–");
+  setText("t_best_c", best ? `#${best.submit_id} · ${best.commit.slice(0, 8)}` : "no scored submits");
+  setHtml("t_sub_v", `${records.length}` + (stop.max_submits ? `<small> / ${stop.max_submits}</small>` : ""));
+  setText("t_sub_c", failed ? failed + " failed" : "all scored");
+  setHtml("t_kept_v", `${kept}<small> / ${scored.length}</small>`);
+  setText("t_gain_v", lastGain === null ? "–" : expfmt(lastGain));
+  setText("t_gain_c", s.finished ? "run over" : "latest improvement");
+}
 
-  $("charttitle").textContent = `${obj.metric} over submits`;
+function syncChart(records, scored, obj) {
+  const svg = $("chart");
+  const fp = records.map(r => [r.submit_id, r.status,
+      r.metric && r.metric.value, r.test_metric && r.test_metric.value,
+      r.best_so_far].join(",")).join(";") + "|" + (svg.clientWidth || 0);
+  if (svg.dataset.fp === fp) return;
+  svg.dataset.fp = fp;
   renderChart(records, scored, obj);
-  renderDetail(records);
 }
 
 /* ── chart ─────────────────────────────────────────────────────── */
@@ -600,6 +667,13 @@ function renderDetail(records) {
   const el = $("detail");
   const rec = records.find(r => r.submit_id === state.selected);
   if (!rec) { el.innerHTML = `<div class="empty">no submits yet</div>`; return; }
+  // The detail panel shows immutable content: a git commit and a final
+  // record. Rebuild ONLY when the user changes submit or tab, or the
+  // viewed submit's status transitions (snapshotted -> scored). A live
+  // run updating around the user must never touch what they are reading.
+  const detailFp = [rec.submit_id, rec.status, state.tab, state.diffBase].join("|");
+  if (detailFp === state.lastDetailFp) return;
+  state.lastDetailFp = detailFp;
   const tabs = ["notes", "viz", "files", "eval", "diff"];
   el.innerHTML = `
     <div class="dhead">
@@ -679,14 +753,16 @@ async function renderTab(rec, records) {
         body.querySelectorAll(".frow").forEach(x => x.classList.remove("sel"));
         row.classList.add("sel");
         const path = row.dataset.p;
+        state.filePath = path;  // sticky: survives submit switches and rebuilds
         if (!d.files[path]) d.files[path] = await api(`file/${id}?path=${encodeURIComponent(path)}`);
         $("fpath").textContent = path;
         $("fsize").textContent = row.querySelector(".sz").textContent;
         $("fileview").innerHTML = highlight(d.files[path].content, path)
           + (d.files[path].truncated ? "\n… (truncated)" : "");
       }));
-      const first = body.querySelector(".frow[data-p]");
-      if (first) first.click();
+      const rows = [...body.querySelectorAll(".frow[data-p]")];
+      const target = rows.find(r => r.dataset.p === state.filePath) || rows[0];
+      if (target) target.click();
     } else if (state.tab === "eval") {
       const d = await detailData(id);
       if (id !== state.selected) return;

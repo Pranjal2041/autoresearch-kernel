@@ -1,6 +1,6 @@
 [project]
 name = "autoresearch-kernel"
-version = "0.2.0"
+version = "0.2.1"
 description = "The autoresearch kernel: experiments as folders (seed + rules + objective), agents and runners as swappable pillars."
 requires-python = ">=3.11"
 dependencies = [
