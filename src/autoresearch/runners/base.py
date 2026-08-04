@@ -94,7 +94,7 @@ class Runner(ABC):
         return image
 
     def interactive_shell(self, image: str, mounts: list[Mount]) -> int:
-        """Drop the user into a shell in a sandbox (for `ar auth`). Only
+        """Drop the user into a shell in a sandbox (for `ark auth`). Only
         container runners support this."""
         raise NotImplementedError(f"runner '{self.name}' has no interactive shell")
 

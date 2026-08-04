@@ -1,8 +1,8 @@
-"""`ar init`: scaffold a new experiment folder.
+"""`ark init`: scaffold a new experiment folder.
 
 Generates a working official-mode experiment: a commented experiment.yaml,
-rules, a trivial seed, and an eval stub that already runs. `ar validate`
-passes on the result, and `ar run` with the random-search agent produces
+rules, a trivial seed, and an eval stub that already runs. `ark validate`
+passes on the result, and `ark run` with the random-search agent produces
 real scored submits, so the user starts from a green pipeline and edits,
 rather than from a blank page.
 """
@@ -20,7 +20,7 @@ objective:
   metric: score
   direction: maximize          # minimize | maximize
   mode: official               # official: /eval scores it. reported: the
-                               # agent self-reports (see `ar help experiment`)
+                               # agent self-reports (see `ark help experiment`)
   eval_command: python3 /eval/run.py --out /result/metrics.json
   metric_path: metrics.json:score
   timeout_seconds: 300

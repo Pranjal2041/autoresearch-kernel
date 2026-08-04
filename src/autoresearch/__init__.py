@@ -6,4 +6,4 @@ a runner. See DESIGN.md at the repository root: that document is the
 contract, code follows it.
 """
 
-__version__ = "0.1.1"
+__version__ = "0.2.0"

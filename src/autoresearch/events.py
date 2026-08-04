@@ -1,6 +1,6 @@
 """Append-only JSONL event log: the single source of truth for a run.
 
-Every state change is an event. The dashboard, `ar history`, and resume all
+Every state change is an event. The dashboard, `ark history`, and resume all
 replay this file. Nothing else is authoritative.
 
 Event types:

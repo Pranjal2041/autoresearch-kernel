@@ -1,7 +1,7 @@
-"""Help texts for the `ar` CLI.
+"""Help texts for the `ark` CLI.
 
 Long-form documentation lives here, one entry per command and per concept
-topic, so `ar help <thing>` can explain semantics the way `uv help <cmd>`
+topic, so `ark help <thing>` can explain semantics the way `uv help <cmd>`
 does: prose first, then usage, then examples.
 """
 
@@ -14,7 +14,7 @@ agent and a runner. The agent is any process that edits the workspace and
 calls submit over HTTP. Each submit snapshots the workspace into git,
 scores it in a clean sandbox, and logs the result. Best snapshot wins.
 
-Usage: ar <COMMAND> [OPTIONS]
+Usage: ark <COMMAND> [OPTIONS]
 
 Commands:
   init       Scaffold a new experiment folder
@@ -28,7 +28,7 @@ Commands:
   auth       Set up an agent's credentials for container runners
   help       Detailed documentation for a command or concept
 
-Concepts (ar help <concept>):
+Concepts (ark help <concept>):
   experiment   The folder anatomy and every experiment.yaml field
   agents       What an agent is and how to add one
   runners      local, apple, docker, and the sandbox contract
@@ -37,13 +37,13 @@ Concepts (ar help <concept>):
   design       The full frozen design contract (DESIGN.md)
 
 Examples:
-  ar validate experiments/circle_packing
-  ar run experiments/circle_packing --agent claude-code --runner apple
-  ar watch runs                # dashboard over every run, newest first
-  ar history runs/my_run
-  ar help run
+  ark validate experiments/circle_packing
+  ark run experiments/circle_packing --agent claude-code --runner apple
+  ark watch runs                # dashboard over every run, newest first
+  ark history runs/my_run
+  ark help run
 
-`ar help design` prints the full frozen design contract.
+`ark help design` prints the full frozen design contract.
 """
 
 COMMANDS: dict[str, str] = {
@@ -52,7 +52,7 @@ Scaffold a new experiment folder.
 
 Creates a complete, working official-mode experiment: a commented
 experiment.yaml, a rules.md skeleton, a trivial seed candidate, and an
-eval stub that scores it. The result passes `ar validate` and runs
+eval stub that scores it. The result passes `ark validate` and runs
 end-to-end with the random-search agent immediately, so you start from a
 green pipeline and edit, rather than debugging a blank page.
 
@@ -60,12 +60,12 @@ Edit order that works well: eval/run.py (the scorer defines the game),
 then experiment.yaml (metric, environment, budgets), then rules.md (what
 the agent is told), then seed/.
 
-Usage: ar init <path>
+Usage: ark init <path>
 
 Examples:
-  ar init experiments/kernel_speedrun
-  ar validate experiments/kernel_speedrun
-  ar run experiments/kernel_speedrun --agent dummy
+  ark init experiments/kernel_speedrun
+  ark validate experiments/kernel_speedrun
+  ark run experiments/kernel_speedrun --agent dummy
 """,
     "list": """\
 List runs, experiments, agents, and runners.
@@ -75,11 +75,11 @@ runner, submit count, best score, and status. Experiments and agents are
 discovered from ./experiments and ./agents in the working directory.
 Runners are the registered backends.
 
-Usage: ar list [all | runs | experiments | agents | runners] [--runs-dir D]
+Usage: ark list [all | runs | experiments | agents | runners] [--runs-dir D]
 
 Examples:
-  ar list
-  ar list runs --runs-dir /scratch/ar-runs
+  ark list
+  ark list runs --runs-dir /scratch/ar-runs
 """,
     "validate": """\
 Check an experiment folder against the schema.
@@ -94,10 +94,10 @@ Reported-mode experiments are additionally checked for a required number
 field in the submit signature matching the objective metric, since that
 field is the self-reported score.
 
-Usage: ar validate <experiment>
+Usage: ark validate <experiment>
 
 Examples:
-  ar validate experiments/circle_packing
+  ark validate experiments/circle_packing
 """,
     "run": """\
 Run an experiment with an agent on a runner.
@@ -121,7 +121,7 @@ sandboxes; their logs land in <run>/evals/<submit>/.
 The experiment defines the game; --agent and --runner are run
 configuration, so the same experiment is comparable across agents.
 
-Usage: ar run <experiment> --agent <name|path> [OPTIONS]
+Usage: ark run <experiment> --agent <name|path> [OPTIONS]
 
 Options:
   --agent      agent name (looked up under ./agents) or a path to an
@@ -130,7 +130,7 @@ Options:
                can race on one experiment). Each instance gets its own
                workspace and git branch; all share one submit lane
                (retry on 409) and one global best.
-  --runner     local | apple | docker (default: local). See `ar help
+  --runner     local | apple | docker (default: local). See `ark help
                runners` for the trade-offs; local has no isolation.
   --name       run name (default: timestamped). Also the dashboard label.
   --runs-dir   parent directory for run folders (default: ./runs)
@@ -140,10 +140,10 @@ Options:
                repeatable. e.g. --agent-env AR_CLAUDE_MODEL=claude-sonnet-5
 
 Examples:
-  ar run experiments/toy_quadratic --agent dummy
-  ar run experiments/circle_packing --agent claude-code --runner apple \\
+  ark run experiments/toy_quadratic --agent dummy
+  ark run experiments/circle_packing --agent claude-code --runner apple \\
       --agent-env AR_CLAUDE_MODEL=claude-sonnet-5 --name sonnet_apple
-  ar run experiments/circle_packing --agent claude-code --name sonnet_apple --resume
+  ark run experiments/circle_packing --agent claude-code --name sonnet_apple --resume
 """,
     "watch": """\
 Serve the web dashboard.
@@ -161,14 +161,14 @@ kernel-only test series), and per-submit inspection: full notes, exact
 metrics, the complete workspace file tree at that submit's commit with
 file contents, official eval logs, and a diff against any other submit.
 
-Usage: ar watch <run_dir | runs_dir> [--port N]
+Usage: ark watch <run_dir | runs_dir> [--port N]
 
 Options:
   --port   port to bind on 127.0.0.1 (default: 8722)
 
 Examples:
-  ar watch runs
-  ar watch runs/sonnet_apple --port 9000
+  ark watch runs
+  ark watch runs/sonnet_apple --port 9000
 """,
     "history": """\
 Print the submit table of a run.
@@ -178,14 +178,14 @@ for submits that advanced the best, the snapshot commit, and the agent's
 note (or the failure reason). Reads only events.jsonl, so it works on
 live runs and crashed runs alike.
 
-Usage: ar history <run_dir> [--json]
+Usage: ark history <run_dir> [--json]
 
 Options:
   --json   emit the full records as JSON instead of a table
 
 Examples:
-  ar history runs/sonnet_apple
-  ar history runs/sonnet_apple --json | jq '.[] | select(.best_so_far)'
+  ark history runs/sonnet_apple
+  ark history runs/sonnet_apple --json | jq '.[] | select(.best_so_far)'
 """,
     "best": """\
 Print the best submit record of a run as JSON.
@@ -195,11 +195,11 @@ record includes the exact metric value, the snapshot commit (from which
 the winning code can be checked out), the environment image digest, and
 the agent's note.
 
-Usage: ar best <run_dir>
+Usage: ark best <run_dir>
 
 Examples:
-  ar best runs/sonnet_apple
-  ar best runs/sonnet_apple | jq -r .commit
+  ark best runs/sonnet_apple
+  ark best runs/sonnet_apple | jq -r .commit
 """,
     "diff": """\
 Show what changed between two submits.
@@ -209,11 +209,11 @@ kernel-owned repository. Every submit is exactly one commit, so this
 answers "what did the agent actually change between attempt A and B".
 Large files (hash-only in the manifest) appear as binary changes.
 
-Usage: ar diff <run_dir> <a> <b>
+Usage: ark diff <run_dir> <a> <b>
 
 Examples:
-  ar diff runs/sonnet_apple 1 2
-  ar diff runs/sonnet_apple 9 13 | less
+  ark diff runs/sonnet_apple 1 2
+  ark diff runs/sonnet_apple 9 13 | less
 """,
     "auth": """\
 Set up an agent's credentials for container runners.
@@ -233,7 +233,7 @@ Two paths, tried in order:
    writes persists on the host. This is the path on macOS, where the
    host CLI keeps tokens in the Keychain rather than a file.
 
-Usage: ar auth <agent> [OPTIONS]
+Usage: ark auth <agent> [OPTIONS]
 
 Options:
   --runner  apple | docker (default: apple)
@@ -241,18 +241,18 @@ Options:
   --shell   open the interactive shell even if seeding succeeded
 
 Examples:
-  ar auth claude-code
-  ar auth claude-code --runner docker --shell
+  ark auth claude-code
+  ark auth claude-code --runner docker --shell
 """,
     "help": """\
 Display documentation for a command or concept.
 
-Usage: ar help [command | concept]
+Usage: ark help [command | concept]
 
 Examples:
-  ar help
-  ar help run
-  ar help experiment
+  ark help
+  ark help run
+  ark help experiment
 """,
 }
 
@@ -315,7 +315,7 @@ experiment.yaml, field by field:
 Commands are written against canonical paths (/workspace, /eval, /result)
 and are rewritten or mounted per runner. Programs running inside a
 sandbox locate them via AR_WORKSPACE, AR_EVAL, AR_RESULT, never by
-hardcoding. See `ar help runners`.
+hardcoding. See `ark help runners`.
 """,
     "agents": """\
 An agent is any process that edits the workspace and calls the kernel
@@ -327,13 +327,13 @@ An agent is a folder with agent.yaml:
   name, description   identity
   command             what to launch inside the agent sandbox
   env                 extra environment variables (overridable per run
-                      with `ar run --agent-env KEY=VALUE`)
+                      with `ark run --agent-env KEY=VALUE`)
   mounts              extra mounts, typically credentials
   image_setup         container-layer commands (CLI installs), cached
                       per image. Ignored by the local runner, which
                       expects the tools on the host.
-  auth_seed           where `ar auth` may copy credentials from
-  auth_help           login instructions `ar auth` prints in its shell
+  auth_seed           where `ark auth` may copy credentials from
+  auth_help           login instructions `ark auth` prints in its shell
 
 The kernel injects AR_API_URL, AR_WORKSPACE, AR_AGENT_DIR, AR_RULES, and
 AR_OBJECTIVE. The agent owns its inner loop entirely: it may run
@@ -408,8 +408,8 @@ submit time: git is the history, not the transport. The manifest hash
 attests that what eval consumed matches the snapshot.
 
 Provenance of any attempt is two ids: environment image digest plus
-commit hash. `ar diff` and the dashboard's files tab read this history;
-`ar best | jq -r .commit` gives you the winning snapshot to check out.
+commit hash. `ark diff` and the dashboard's files tab read this history;
+`ark best | jq -r .commit` gives you the winning snapshot to check out.
 """,
     "api": """\
 The kernel HTTP API is the only channel between agent and kernel.

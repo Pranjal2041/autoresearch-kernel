@@ -98,7 +98,7 @@ The agent owns its inner loop entirely. It may run anything, delete anything, us
 
 Owns the contracts and the bookkeeping. Contains:
 
-- CLI: `ar validate`, `ar run <experiment> --agent <name> --runner <name> --name <run>`, `ar watch`, `ar history`, `ar diff <i> <j>`, `ar resume`.
+- CLI: `ark validate`, `ark run <experiment> --agent <name> --runner <name> --name <run>`, `ark watch`, `ark history`, `ark diff <i> <j>`, `ark resume`.
 - The submit transaction (below).
 - Workspace tracking (below).
 - Registry resolving agents and runners by name.
@@ -180,7 +180,7 @@ Provenance of any attempt is two ids: image digest plus commit hash.
 
 ## Build plan
 
-1. **Schemas.** experiment.yaml and the submit record, validated by `ar validate`. (This document is the spec.)
+1. **Schemas.** experiment.yaml and the submit record, validated by `ark validate`. (This document is the spec.)
 2. **Core loop.** Experiment loader, subprocess runner, HTTP API, tracking, JSONL log. Prove it end to end with a toy experiment and a scripted dummy agent.
 3. **Real run.** Docker runner, Claude Code agent, a speedrun-style experiment. First overnight run.
 4. **Dashboard.** Web app over events.jsonl and git: metric over submits, val versus test, diffs between attempts, live feed.

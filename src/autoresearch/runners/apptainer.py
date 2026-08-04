@@ -24,7 +24,7 @@ Design notes, and how this differs from the container runners:
 
 Typical Slurm use:
   salloc/srun an allocation, then inside it:
-    ar run experiments/my_exp --agent claude-code --runner apptainer
+    ark run experiments/my_exp --agent claude-code --runner apptainer
 """
 
 from __future__ import annotations
